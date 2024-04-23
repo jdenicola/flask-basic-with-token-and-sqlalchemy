@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 
 from config import Config
-from common.database import db
+from models.database import db
 
 config = Config()
 
 
-class Users(db.Model):
-    __tablename__ = 'users'
+class User(db.Model):
+    __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
     username = Column(String(255), nullable=False)

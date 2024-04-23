@@ -5,8 +5,13 @@ import sys
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-import json
 from http import HTTPStatus
+
+from models.database import db, create_databases
+from config import Config
+from models.user import User
+
+config = Config()
 
 # SSL Configuration (Enable it if you want a security context here)
 # It's highly recommended that you run Flask behind a proxy to avoid server headers exposure.
@@ -15,6 +20,17 @@ from http import HTTPStatus
 # context.load_cert_chain('certificate.crt', 'privatekey.key')
 
 app = Flask(__name__)
+
+# Database Init
+
+db_url = f'mysql+pymysql://{config.DB_USERNAME}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{config.DB_NAME}'
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
+db.init_app(app)
+
+# This command will create all databases.
+create_databases(app)
+
 CORS(app)
 
 # Cambio auth a Token:
@@ -149,7 +165,10 @@ def verify_token(token):
 @multi_auth.login_required(role=['admin'])
 def hello_world():
     """This is a sample endpoint"""
-    return generate_response("You logged in successfully. Congrats!")
+    db.session.add(User('admin', 'First Name', 'Last Name', 'supersafe',
+                        'admin@localhost', 'abcdef123456', True))
+    db.session.commit()
+    return generate_response("Some user has been created. Congrats!")
 
 
 @app.route('/goodbye', methods=['POST', 'GET'])
